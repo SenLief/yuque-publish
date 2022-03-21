@@ -3,11 +3,15 @@
 
 ## 使用
 1. 配置`.env`文件
+`$ touch .env`  
+输入以下的变量信息
+```env
 TOKEN='' #语雀的个人token(https://www.yuque.com/settings/tokens)
 NAMESPACE='' #语雀的namespace,例如`zjan/bwcmnq`,在url中可以看到。
 DESDIR='' #文档下载到哪个目录，可以按分组生成子文件夹
 WORKDIR='' #cmd工作目录，比如hugo静态生成的文件夹目录
 CMD='' #下载后可以自动执行的命令，比如`hugo g`
+```
 
 2. 初始化
 **如果文档已经写了很多了，那么可以先全部下载下来，然后再进行管理**
