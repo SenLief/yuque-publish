@@ -43,7 +43,8 @@ def deploy(func):
 def init_doc():
     yq = YuQue(token)
     tree = yq.get_doc_tree(namespace)
-    with open('yuque.json', 'w+') as f:
+    tree_path = Path(desdir, 'yuque.json')
+    with open(tree_path, 'w+') as f:
         json.dump(tree, f, indent=6)
     
     for group in tree:
@@ -66,7 +67,8 @@ def publish_doc(slug, doc, title):
     # 获取目录列表
     yq = YuQue(token)
     tree = yq.get_doc_tree(namespace)
-    with open('yuque.json', 'w+') as f:
+    tree_path = Path(desdir, 'yuque.json')
+    with open(tree_path, 'w+') as f:
         json.dump(tree, f, indent=6)
 
     # 找到slug在那个分组
@@ -89,7 +91,8 @@ def publish_doc(slug, doc, title):
 
 @deploy
 def delete_doc(slug, title):
-    with open('yuque.json', 'r') as f:
+    tree_path = Path(desdir, 'yuque.json')
+    with open(tree_path, 'r') as f:
         tree = json.load(f)
     
     for group in tree:
@@ -103,7 +106,8 @@ def delete_doc(slug, title):
 
 @deploy
 def update_doc(slug, doc, title):
-    with open('yuque.json', 'r') as f:
+    tree_path = Path(desdir, 'yuque.json')
+    with open(tree_path, 'r') as f:
         tree = json.load(f)
     
     for group in tree:
