@@ -56,10 +56,10 @@ def hugo_lake_to_md(docs, title):
             doc_list.append('---')
         else:
             doc = md_list
-            doc_list.insert(0, '---' + '\n')
+            doc_list.insert(0, '---')
             doc_list.append('title: ' + title)
             doc_list.append('date: ' + date)
-            doc_list.append('---' + '\n')
+            doc_list.append('---')
         
         for line in doc:
             # 处理图片，后面会可选是否把图片拉到本地，现在可以使用图片。
