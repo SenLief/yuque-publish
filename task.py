@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 from yuque import YuQue
-from lake2md import lake_to_md
+from lake2md import hugo_lake_to_md
 
 
 try:
@@ -57,7 +57,7 @@ def init_doc():
             doc = yq.get_doc(namespace, slug)
             file = Path(path, doc['title'] + '.md')
             with open(file, 'w') as f:
-                md_doc = lake_to_md(doc['body'])
+                md_doc = hugo_lake_to_md(doc['body'], doc['title'])
                 f.writelines(md_doc)
             print(doc['title'] + "已经下载")
 
@@ -85,7 +85,7 @@ def publish_doc(slug, doc, title):
         Path(path).mkdir(parents=True)
     file = Path(path, title + '.md')
     with open(file, 'w') as f:
-        md_doc = lake_to_md(doc)
+        md_doc = hugo_lake_to_md(doc, title)
         f.writelines(md_doc)
  
 
@@ -120,7 +120,7 @@ def update_doc(slug, doc, title):
                 print("文档已被修改或移动，直接覆盖")
             file = Path(path, title + '.md')
             with open(file, 'w') as f:
-                md_doc = lake_to_md(doc)
+                md_doc = hugo_lake_to_md(doc, title)
                 f.writelines(md_doc)
         else:
             pass
