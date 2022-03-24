@@ -66,9 +66,12 @@ def hugo_lake_to_md(docs, title):
             if '![' in line and '<br />' in line:
                 new = line.split('#')[0] + ')'
                 new_line = new.replace('<br />', '\n')
-                doc_list.append(new_line)
+                doc_list.append('\n' + new_line)
             elif '![' in line:
                 new = line.split('#')[0] + ')'
+                doc_list.append('\n' + new)
+            elif '<br />' in line:
+                new = line.replace('<br />', '\n')
                 doc_list.append(new)
             else: 
                 doc_list.append(line)
@@ -79,6 +82,8 @@ def hugo_lake_to_md(docs, title):
 
 
 if __name__ == '__main__':
-    docs = "```yaml\ndescription: \"Esmeralda\"\nfeatured_image: \"/images/esmeralda.jpg\"\ntags: []\ncategories: Story\n```\n下面主要是一些内容的测试\n"
-    # print(lake_to_md(docs))
-    print(hugo_lake_to_md(docs, '测试test'))
+    docs = "这是第一段文字    <br />这是第二段文字    <br />理论上他们应该是三个锻炼    \n> 这个是下个的测试内容了    \n\n![uTools_1648054722512.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648135776812-d200e74b-87c0-4a7c-b88d-b1718cb4dac1.png#clientId=uca452dff-1f61-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=u1bf174bd&margin=%5Bobject%20Object%5D&name=uTools_1648054722512.png&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=ub070ee11-f50f-429b-ac87-58326349b22&title=)\n> 感觉是需要调整的\n\n"
+    print(hugo_lake_to_md(docs, 'test'))
+    # with open('test.md', 'w') as f:
+    #     md_doc = hugo_lake_to_md(docs, 'test')
+    #     f.writelines(md_doc)
