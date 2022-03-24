@@ -1,6 +1,9 @@
 # yuque-publish
 让语雀作为静态博客的后端管理和编辑器，利用Webhook实现自动化部署。
 
+# 具体请看这篇文章
+[把语雀作为博客的文档管理和编辑器](https://senlief.xyz/posts/%E6%8A%8A%E8%AF%AD%E9%9B%80%E4%BD%9C%E4%B8%BA%E5%8D%9A%E5%AE%A2%E7%9A%84%E6%96%87%E6%A1%A3%E7%AE%A1%E7%90%86%E5%92%8C%E7%BC%96%E8%BE%91%E5%99%A8/)
+
 ## 使用
 1. 配置`.env`文件
 
