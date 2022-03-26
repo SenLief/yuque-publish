@@ -13,7 +13,7 @@ def yuque(data: dict, background_tasks: BackgroundTasks):
         background_tasks.add_task(publish_doc, req['slug'], req['body'], req['title'])
     elif type == 'update':
         background_tasks.add_task(update_doc, req['slug'], req['body'], req['title'])
-    elif type == 'comment_create':
+    elif type == 'comment_create' and req['actor_id'] == req['commentable']['user_id']:
         background_tasks.add_task(delete_doc, req['commentable']['slug'], req['commentable']['title'])
     else:
         print("未知的请求TYPE")
