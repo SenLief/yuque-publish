@@ -22,6 +22,7 @@ try:
     namespace = config['NAMESPACE']
     cmd = config['CMD']
     workdir = config['WORKDIR']
+    html = config['HTML']
 except Exception as e:
     print(f"环境变量配置错误：{0}", e)
 
@@ -85,7 +86,7 @@ def publish_doc(slug, doc, title):
         Path(path).mkdir(parents=True)
     file = Path(path, title + '.md')
     with open(file, 'w') as f:
-        md_doc = hugo_lake_to_md(doc, title)
+        md_doc = hugo_lake_to_md(doc, title, html=html)
         f.writelines(md_doc)
  
 
@@ -120,7 +121,7 @@ def update_doc(slug, doc, title):
                 print("文档已被修改或移动，直接覆盖")
             file = Path(path, title + '.md')
             with open(file, 'w') as f:
-                md_doc = hugo_lake_to_md(doc, title)
+                md_doc = hugo_lake_to_md(doc, title, html=html)
                 f.writelines(md_doc)
         else:
             pass
