@@ -43,90 +43,84 @@ def deploy(func):
 
 def init_doc():
     yq = YuQue(token)
-    tree = yq.get_doc_tree(namespace)
+    trees = yq.get_info(namespace)
+
+    # 把目录写到本地，以便于更新和删除
     tree_path = Path(desdir, 'yuque.json')
     with open(tree_path, 'w+') as f:
-        json.dump(tree, f, indent=6)
+        json.dump(trees, f, indent=6)
     
-    for group in tree:
-        for slug in group['slug']:
-            path = Path(desdir, group['title'])
-            if Path(path).exists():
+    # 遍历目录树
+    for tree in trees:
+        path = Path(desdir, tree['path'])
+        if Path(path).exists():
                 pass
-            else:
-                Path(path).mkdir(parents=True)
-            doc = yq.get_doc(namespace, slug)
-            file = Path(path, doc['title'] + '.md')
-            with open(file, 'w') as f:
-                md_doc = hugo_lake_to_md(doc['body'], doc['title'])
-                f.writelines(md_doc)
-            print(doc['title'] + "已经下载")
+        else:
+            Path(path).mkdir(parents=True)
+        doc = yq.get_doc(namespace, tree['slug'])
+        file = Path(desdir, Path(tree['path']), tree['title'] + '.md')
+        with open(file, 'w') as f:
+            md_doc = hugo_lake_to_md(doc['body'], doc['title'])
+            f.writelines(md_doc)
+        print(doc['title'] + "已经下载")
 
 
 @deploy
-def publish_doc(slug, doc, title):
+def publish_doc(slug, doc):
     # 获取目录列表
     yq = YuQue(token)
-    tree = yq.get_doc_tree(namespace)
+    trees = yq.get_info(namespace)
     tree_path = Path(desdir, 'yuque.json')
     with open(tree_path, 'w+') as f:
-        json.dump(tree, f, indent=6)
+        json.dump(trees, f, indent=6)
 
-    # 找到slug在那个分组
-    for group in tree:
-        if slug in group['slug']:
-            group_path = Path(group['title'])
+    for tree in trees:
+        path = Path(desdir, tree['path'])
+        if Path(path).exists():
+                pass
         else:
-            pass
-    
-    path = Path(desdir, group_path)
-    if Path(path).exists():
-        pass
-    else:
-        Path(path).mkdir(parents=True)
-    file = Path(path, title + '.md')
-    with open(file, 'w') as f:
-        md_doc = hugo_lake_to_md(doc, title, html=html)
-        f.writelines(md_doc)
- 
+            Path(path).mkdir(parents=True)
+        doc = yq.get_doc(namespace, tree['slug'])
+        file = Path(desdir, Path(tree['path']), tree['title'] + '.md')
+        with open(file, 'w') as f:
+            md_doc = hugo_lake_to_md(doc['body'], tree['title'])
+            f.writelines(md_doc)
+
 
 @deploy
-def delete_doc(slug, title):
+def delete_doc(slug):
     tree_path = Path(desdir, 'yuque.json')
     with open(tree_path, 'r') as f:
-        tree = json.load(f)
+        trees = json.load(f)
     
-    for group in tree:
-        if slug in group['slug']:
-            path = Path(desdir, group['title'], title + '.md')
+    for tree in trees:
+        if tree['slug'] == slug:
+            path = Path(desdir, tree['path'], tree['title'] + '.md')
             Path(path).unlink()
-        else:
-            pass
-    
 
 
 @deploy
-def update_doc(slug, doc, title):
+def update_doc(slug, doc):
     tree_path = Path(desdir, 'yuque.json')
     with open(tree_path, 'r') as f:
-        tree = json.load(f)
+        trees = json.load(f)
     
-    for group in tree:
-        if slug in group['slug']:
-            path = Path(desdir, group['title'])
+    for tree in trees:
+        if tree['slug'] == slug:
+            path = Path(desdir, tree['path'])
             if Path(path).exists():
                 pass
             else:
                 Path(path).mkdir(parents=True)
                 print("文档已被修改或移动，直接覆盖")
-            file = Path(path, title + '.md')
+            file = Path(path, tree['title'] + '.md')
             with open(file, 'w') as f:
-                md_doc = hugo_lake_to_md(doc, title, html=html)
+                md_doc = hugo_lake_to_md(doc, tree['title'], html=html)
                 f.writelines(md_doc)
         else:
             pass
 
-    
+   
 if __name__ == '__main__':
     # publish_doc('qt8h7t', '<a name=\"x9d6C\"></a>\n## 这篇文档只是用来测试的e\n\n', '这是一篇测试文档')
     # update_doc('qt8h7t', '<a name=\"x9d6C\"></a>\n## 更新了一遍文章\n\n', '这是一篇测试文档')

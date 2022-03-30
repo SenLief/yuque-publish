@@ -4,6 +4,7 @@
 
 import requests
 import yaml
+from pathlib import Path
 
 class YuQue:
     def __init__(self, token):
@@ -31,33 +32,28 @@ class YuQue:
         else:
             return resp['data']
 
-    def get_doc_tree(self, namespace):
-            url = self.uri + '/repos/' + namespace
-            resp = self._get(url).json()
+    def get_info(self, namespace):
+        url = self.uri + '/repos/' + namespace
+        resp = self._get(url).json()
 
-            tocs = yaml.safe_load(resp['data']['toc_yml'])[1:]
+        tree_list = yaml.safe_load(resp['data']['toc_yml'])[1:]
+        slug = []
+        node = {}
+        for tree in tree_list:
+            if tree['level'] == 0 and tree['type'] == 'TITLE':
+                node.update({tree['uuid']: Path(tree['title'])})
+            elif tree['level'] == 0 and tree['type'] == 'DOC':
+                slug.append({'path': str(Path()), 'title': tree['title'], 'slug': tree['url']})
+            elif tree['level'] != 0 and tree['type'] == 'TITLE':
+                p_path = node[tree['parent_uuid']]
+                node.update({tree['uuid']: Path(p_path, tree['title'])})
+            else:
+                p_path = node[tree['parent_uuid']]
+                node.update({tree['uuid']: Path(p_path)})
+                slug.append({'path': str(node[tree['uuid']]), 'title': tree['title'], 'slug': tree['url']})
+        return slug
 
-            node = []
-            child_node = []
-            t = [{"title":".", "slug": []}]
 
-            for toc in tocs:
-                if toc['level'] == 0 and toc['type'] == 'DOC':
-                    t[0]['slug'].append(toc['url'])  
-                elif toc['level'] == 0 and toc['type'] == 'TITLE':
-                    node.append(toc)
-                elif toc['level'] != 0:
-                    child_node.append(toc)
-                else:
-                    pass
-            
-            for n in node:
-                slug = []
-                for cn in child_node:          
-                    if cn['parent_uuid'] == n['uuid']:
-                        slug.append(cn['url'])
-                    else:
-                        pass
-                t.append(dict(title=n['title'], slug=slug))
-
-            return t  
+if __name__ == '__main__':
+    yq = YuQue('xxxxxxxxxxxxxxxxxxxx')
+    print(yq.get_info('zjan/bwcmnq'))
