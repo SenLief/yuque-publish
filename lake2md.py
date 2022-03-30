@@ -86,7 +86,7 @@ def hugo_lake_to_md(docs, title, html=False):
         return '\n'.join(doc_list)
 
     # 处理图片
-    p = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg)', re.I)
+    p = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg|7z|zip|rar)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg|7z|zip|rar)', re.I)
 
     for line in content_list:
         if '![' in line:
