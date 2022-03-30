@@ -38,43 +38,51 @@ def hugo_lake_to_md(docs, title, html=False):
     # markdown内容list
     doc_list = []
     # 处理front matter
-    flag = md_list[0]
-    if flag == '```yaml' or flag == '---':
-        if flag == '```yaml':
-            end_index = md_list[1:].index('```') + 1
-        elif flag == '---':
-            end_index = md_list[1:].index('---') + 1
-        else:
-            print("error")
+    if len(md_list) != 0:
+        flag = md_list[0]
+        if flag == '```yaml' or flag == '---':
+            if flag == '```yaml':
+                end_index = md_list[1:].index('```') + 1
+            elif flag == '---':
+                end_index = md_list[1:].index('---') + 1
+            else:
+                print("error")
 
 
-        f = []
-        for line in md_list[1:end_index]:
-            if 'title:' in line and len(line) > 7:
-                f.append('title')
-            elif 'date:' in line and len(line) > 6:
-                f.append('date')
+            f = []
+            for line in md_list[1:end_index]:
+                if 'title:' in line and len(line) > 7:
+                    f.append('title')
+                elif 'date:' in line and len(line) > 6:
+                    f.append('date')
+                else:
+                    pass
+                
+                doc_list.append(line)
+            
+            if 'title' not in f:
+                doc_list.append('title: ' + title)
+            if 'date' not in f:
+                doc_list.append('date: ' + date)
             else:
                 pass
-            
-            doc_list.append(line)
-        
-        if 'title' not in f:
-            doc_list.append('title: ' + title)
-        if 'date' not in f:
-            doc_list.append('date: ' + date)
-        else:
-            pass
 
-        doc_list.insert(0, '---')
-        doc_list.append('---')
-        content_list = md_list[end_index+1:]
+            doc_list.insert(0, '---')
+            doc_list.append('---')
+            content_list = md_list[end_index+1:]
+        else:
+            doc_list.insert(0, '---')
+            doc_list.append('title: ' + title)
+            doc_list.append('date: ' + date)
+            doc_list.append('---')
+            content_list = md_list
     else:
+        print("空文档")
         doc_list.insert(0, '---')
         doc_list.append('title: ' + title)
         doc_list.append('date: ' + date)
         doc_list.append('---')
-        content_list = md_list
+        return '\n'.join(doc_list)
 
     # 处理图片
     p = re.compile(r'https://cdn.nlark.com/yuque\S+#', re.I)

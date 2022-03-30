@@ -58,11 +58,15 @@ def init_doc():
         else:
             Path(path).mkdir(parents=True)
         doc = yq.get_doc(namespace, tree['slug'])
-        file = Path(desdir, Path(tree['path']), tree['title'] + '.md')
-        with open(file, 'w') as f:
-            md_doc = hugo_lake_to_md(doc['body'], doc['title'])
-            f.writelines(md_doc)
-        print(doc['title'] + "已经下载")
+
+        if doc['format'] == 'lake':
+            file = Path(desdir, Path(tree['path']), tree['title'] + '.md')
+            with open(file, 'w') as f:
+                md_doc = hugo_lake_to_md(doc['body'], doc['title'])
+                f.writelines(md_doc)
+            print(doc['title'] + '---' + "已经下载")
+        else:
+            print(doc['title'] + '---' + "格式不支持跳过")
 
 
 @deploy
