@@ -1,0 +1,20 @@
+{
+    "blog": {
+        "token": "",
+        "namespace": "zjan/blog",
+        "desdir": "/home/xxx/Blog/content/posts",
+        "workdir": "/home/xxx/Blog/",
+        "cmd": "hugo",
+        "html": false
+    },
+    
+    "bwcmnq": {
+        "token": "",
+        "namespace": "zjan/bwcmnq",
+        "desdir": "/home/xxx/test",
+        "workdir": "/home/xxx/test/测试1",
+        "cmd": "touch test.conf",
+        "html": false
+    }
+
+}
