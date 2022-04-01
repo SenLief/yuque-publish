@@ -2,19 +2,27 @@
     "blog": {
         "token": "",
         "namespace": "zjan/blog",
-        "desdir": "/home/xxx/Blog/content/posts",
-        "workdir": "/home/xxx/Blog/",
+        "desdir": "/home/janz/Blog/content/posts",
+        "workdir": "/home/janz/Blog/",
         "cmd": "hugo",
-        "html": false
+        "hugo": {
+            "html": true,
+            "shortcode": true,
+            "front": ["author: Janz", "lightgallery: true"]
+        }
     },
     
     "bwcmnq": {
         "token": "",
         "namespace": "zjan/bwcmnq",
-        "desdir": "/home/xxx/test",
-        "workdir": "/home/xxx/test/测试1",
+        "desdir": "/home/janz/test",
+        "workdir": "/home/janz/test",
         "cmd": "touch test.conf",
-        "html": false
+        "hugo": {
+            "html": true,
+            "shortcode": true,
+            "front": ["author: sfdafsd", "img: xxxx"]
+        }
     }
 
 }

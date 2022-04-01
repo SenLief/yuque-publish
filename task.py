@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 from yuque import YuQue
-from lake2md import hugo_lake_to_md
+from lake2md import hugo_lake_to_md, Doc
 
 
 class Config:
@@ -29,7 +29,7 @@ class Config:
                 self.desdir = config[prefix]['desdir']
                 self.workdir = config[prefix]['workdir']
                 self.cmd = config[prefix]['cmd']
-                self.html = config[prefix]['html']
+                self.conf = config[prefix]['hugo']
             else:
                 print("配置不正确！")
         except OSError as e:
@@ -73,8 +73,9 @@ def init_doc(prefix):
 
 
 
-def publish_doc(slug, doc, prefix):
+def publish_doc(slug, doc, title, prefix):
     config = Config(prefix)
+    docs = Doc(doc, title, config.conf)
     # 获取目录列表
     yq = YuQue(config.token)
     trees = yq.get_info(config.namespace)
@@ -91,7 +92,8 @@ def publish_doc(slug, doc, prefix):
                 Path(path).mkdir(parents=True)
             file = Path(config.desdir, Path(tree['path']), tree['title'] + '.md')
             with open(file, 'w') as f:
-                md_doc = hugo_lake_to_md(doc, tree['title'], html=config.html)
+                # md_doc = hugo_lake_to_md(doc, tree['title'], html=config.html)
+                md_doc = docs.lake_to_md()
                 f.writelines(md_doc)
             title = tree['title']
         else:
@@ -116,8 +118,9 @@ def delete_doc(slug, prefix):
     print(f"知识库{config.namespace}删除了一篇名为<<{title}>>的文章!")
 
 
-def update_doc(slug, doc, prefix):
+def update_doc(slug, doc, title, prefix):
     config = Config(prefix)
+    docs = Doc(doc, title, config.conf)
     tree_path = Path(config.desdir, 'yuque.json')
     with open(tree_path, 'r') as f:
         trees = json.load(f)
@@ -132,7 +135,8 @@ def update_doc(slug, doc, prefix):
                 print("文档已被修改或移动，直接覆盖")
             file = Path(path, tree['title'] + '.md')
             with open(file, 'w') as f:
-                md_doc = hugo_lake_to_md(doc, tree['title'], html=config.html)
+                # md_doc = hugo_lake_to_md(doc, tree['title'], html=config.html)
+                md_doc = docs.lake_to_md()
                 f.writelines(md_doc)
             title = tree['title']
         else:
@@ -147,4 +151,5 @@ if __name__ == '__main__':
     # update_doc('ubuab7', '<a name=\"x9d6C\"></a>\n## 更新了一遍文章\n\n', 'uuid2')
     # time.sleep(3)
     # delete_doc('ubuab7', 'uuid2')
-    init_doc('uuid2')    
+    # init_doc('uuid2')    
+    Config('bwcmnq')

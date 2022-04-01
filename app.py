@@ -12,9 +12,9 @@ def yuque(data: dict, prefix: str, background_tasks: BackgroundTasks):
     format = req.get('format', '')
     if format == 'lake':
         if type == 'publish':
-            background_tasks.add_task(publish_doc, req['slug'], req['body'], prefix)
+            background_tasks.add_task(publish_doc, req['slug'], req['body'], req['title'], prefix)
         elif type == 'update':
-            background_tasks.add_task(update_doc, req['slug'], req['body'], prefix)
+            background_tasks.add_task(update_doc, req['slug'], req['body'], req['title'], prefix)
         else:
             print("未知的请求TYPE")
         return {"msg": "收到了Webhook的请求！"}
