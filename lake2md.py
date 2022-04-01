@@ -10,6 +10,7 @@ from pathlib import Path
 
 date = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00")
 
+
 class Doc:
     def __init__(self, doc, title, config):
         self.date = date
@@ -66,17 +67,54 @@ class Doc:
 
     def __media(self, line):
         media_info = []
-        p_url = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg|7z|zip|rar)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg|7z|zip|rar)', re.I)
         p_cap = re.compile(r'\[.*]', re.I)
-        media_url = re.search(p_url, line)[0]
         media_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
         if ' ' in media_cap:
             media_cap = media_cap.replace(' ', '')
         else:
             pass
         media_info.append(media_cap)
-        media_info.append(media_url)
+
+        if 'svg' not in line:
+            p_url = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg|7z|zip|rar)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg|7z|zip|rar)', re.I)
+            # p_cap = re.compile(r'\[.*]', re.I)
+            media_url = re.search(p_url, line)[0]
+            # media_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
+            # if ' ' in media_cap:
+            #     media_cap = media_cap.replace(' ', '')
+            # else:
+            #     pass
+            # media_info.append(media_cap)
+            media_info.append(media_url)
+        else:
+            p_m = re.compile(r'https://cdn.nlark.com/yuque/\w+/\w{32}\.svg')
+            p_url = re.search(p_m, line)[0]
+            media_info.append(p_url)
         return media_info
+
+
+    def __advanced_media(self, line):
+
+        if 'player.bilibili.com' in line:
+            p_bv = re.compile(r'BV\w{10}')
+            bv = re.search(p_bv, line)[0]
+            if '&p=' in line:
+                p_page = re.compile(r'&p=\d+&')
+                page = re.search(p_page, line)[0].lstrip('&p=').rstrip('&')
+                url = f'{{{{< bilibili {bv} {page} >}}}}'
+            else:
+                url = f'{{{{< bilibili {bv} >}}}}'
+        elif 'music.163.com' in line:
+            p_id = re.compile(r'&id=\d+&')
+            pid = re.search(p_id, line)[0].lstrip('&id=').rstrip('&')
+            print(pid)
+            url = f'{{{{< music auto="https://music.163.com/#/song?id={pid}" >}}}}'
+        elif 'ditu.amap.com' in line:
+            # 功能未实现，主题不支持高德，经纬度坐标不同。
+            pass
+        else:
+            url = line
+        return url
 
 
     # def __text(self, line):
@@ -95,6 +133,8 @@ class Doc:
                 new_line = f'<img src={media_info[1]} alt={media_info[0]} referrerPolicy="no-referrer" />'
             else:
                 new_line = f'![{media_info[0]}]({media_info[1]})'
+        elif 'bilibili' or '163' in line:
+            new_line = self.__advanced_media(line)
         elif line.startswith('>'):
             new_line = line + '\n'
         else:
@@ -194,7 +234,7 @@ def hugo_lake_to_md(docs, title, html=False):
 
 
 if __name__ == '__main__':
-    docs =  '''```yaml\ntags: [语雀, 发布, 测试]\n```\n<a name=\"tqoYN\"></a>\n## 初衷\n一直有记录的习惯，有时候是随笔，有时候是记下备忘，有时候是分享，试过很多的工具，但是都无法满足。我们需要的不是那么Geek，就是简简单单的使用，语雀就是这样的一个工具，语雀的编辑体验给我的感觉很好，很有输入的欲望，一个好的编辑器才能让我们愉快的输入文字和记录文字。    \n\n语雀的也是可以分享的，我也会使用，但是语雀毕竟是在线的服务，虽然现在可以离线使用了，但是数据还是想保存到本地的，这样数据才会更有安全感。     \n\n语雀的导出格式是私有的格式，其他平台无法导入的，虽然提高了api，但是格式的问题也是不好解决。所以想自己写个简单的脚本来完成备份，同时也兼顾了发布的功能，推送到自己的博客上面来，以望做个备份的地方。\n<a name=\"o6aMw\"></a>\n## yuque-publish\n\n<a name=\"Q0DJG\"></a>\n### 类似的项目\n\n在Github上有类似的工具，比如yuque-hexo，但是我自己不用hexo的，同时yuque-hexo无法生成目录树的结构，如果用hexo的不妨看看这个项目，完成度高了很多，已经是很好用的级别了。\n\n<a name=\"SCjeE\"></a>\n### yuque-publish\n<a name=\"bkqkL\"></a>\n#### 特点\n\n- 利用语雀的webhook功能，实现自动部署。\n- 在语雀上完成`发布文档`、`更新文档`、`删除文档`功能\n- 保留目录树的结够，便于分类（目前只实现了一级的分组，语雀api目录树解析需要额外处理）\n- 搭配hugo静态博客更方便\n<a name=\"mrZFW\"></a>\n#### 缺点\n\n- 只是简单实现，只用于自己的备份的和发布，压力很小，代码只是实现逻辑，还没有优化。\n- 只能解析markdown文档，一些特性无法支持，比如思维导图，画板等无法实现。\n- 图片防盗链，现在只能依靠修改主题来实现\n- 目前只能解析1级的分组，更深的没有实现（觉得没什么必要）\n\n<a name=\"gPNOk\"></a>\n## 使用\n<a name=\"S3qJS\"></a>\n### 要求\n\n- Python3\n- Hugo生成的站点\n<a name=\"uJBex\"></a>\n### 安装yuque-publish\n```bash\n$ git clone https://github.com/SenLief/yuque-publish.git\n$ cd yuque-publish\n\n# 可以用虚拟环境来使用\n$ python3 -m venv ~/.venv\n$ source ~/.venv/bin/activate\n$ pip3 install -r requirements.txt\n```\n<a name=\"RmZNZ\"></a>\n### 配置ENV\n```bash\n$ vim .env\n\n# 输入并配置以下内容\nTOKEN='' #语雀的个人token(https://www.yuque.com/settings/tokens)\nNAMESPACE='' #语雀的namespace,例如`zjan/bwcmnq`,在url中可以看到。\nDESDIR='' #文档下载到哪个目录，可以按分组生成子文件夹\nWORKDIR='' #cmd工作目录，比如hugo静态生成的文件夹目录\nCMD='' #下载后可以自动执行的命令，比如`hugo`\n```\n<a name=\"S8cE9\"></a>\n### 初始化文档\n> 如果语雀中已经有相应的文档，需要备份和发布，可以先初始化文档，会把已有的文档下载到上面的DESDIR目录，请注意配置好Front matter，要不无法生成，另外无法获取非markdown的内容。    \n\n```bash\n# 下载已有内容到DESDIR，比如hugo的content目录\n$ python3 task.py\n```\n<a name=\"FmFl3\"></a>\n### 启动http server服务器监听webhook请求\n> 建议反代IP:Port    \n\n```bash\n$ python app.py\n\n# 默认监听8080端口，被占用的话就修改app.py随意的改。\n```\n<a name=\"GBpJG\"></a>\n## 语雀APP使用\n<a name=\"ymvUC\"></a>\n### 配置webhook机器人\n\n`知识库设置-更多设置-消息推送-其他渠道-填写信息-勾选新增评论，点击添加。`<br />![image.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648109835461-e1f77df0-6852-4596-9cf8-db69640e3915.png#clientId=ufe709b44-d297-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=374&id=ua23c72db&margin=%5Bobject%20Object%5D&name=image.png&originHeight=467&originWidth=1515&originalType=binary&ratio=1&rotation=0&showTitle=false&size=113805&status=done&style=none&taskId=u89a5c15c-8bbf-45da-9795-54fdd20d7ed&title=&width=1212)<br />![屏幕截图 2022-03-24 162005.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648110209170-dc3ee404-400e-4208-a6ec-0e6a2b6dbad0.png#clientId=ufe709b44-d297-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=uc1f7b601&margin=%5Bobject%20Object%5D&name=%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202022-03-24%20162005.png&originHeight=802&originWidth=1405&originalType=binary&ratio=1&rotation=0&showTitle=false&size=55007&status=done&style=none&taskId=u669c7eb5-dd75-45a5-90f7-27868c5725a&title=)\n> 可以点击一下测试，服务器会收到一个请求。\n\n<a name=\"cGHqa\"></a>\n### 知识库目录管理\n> 目前只支持一级的分组所以不要有2级分组，有也没用，分组太多，太乱了。    \n> 注意：是分组，不是文档下的创建子文档，子文档不会生成目录树。          \n\n\n`首页-目录管理-新建分组`（我基本上就是分组来分类的）           <br />![image.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648110473154-6eefa751-cd9c-4ff9-8ac8-75e8897b6ebc.png#clientId=ufe709b44-d297-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=540&id=u140ccb44&margin=%5Bobject%20Object%5D&name=image.png&originHeight=675&originWidth=1805&originalType=binary&ratio=1&rotation=0&showTitle=false&size=60801&status=done&style=none&taskId=udd9e1179-5fe1-4032-9077-20e884c7744&title=&width=1444)\n\n> 没有在分组中的文档会在DESDIR的根目录，有分组的就是在DESDIR/分组/文档     \n\n\n**目录树**\n```\n$DESDIR\n  - doc1\n  - doc2\n  - group1\n    - doc3\n    - doc4\n  - group2\n    - doc5\n    - doc6\n```\n<a name=\"vxwib\"></a>\n### 管理文档\n<a name=\"gXssh\"></a>\n#### 发布文档\n> 需要关闭 自动发布的功能，自动发布的功能不能触发webhook推送。\n\n1. Front Matter\n   1. 注意：Front matter为`yaml`格式，不过由于直接使用`---`太丑了，所以我使用了代码块作为Front matter，代码块的语言选择`yaml`。front代码块必须是所有代码块的最前面，务必保证`yaml`语法没有问题\n   1. ![image.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648110931030-2e7af4c5-af73-429e-ab36-71d24d75643c.png#clientId=ufe709b44-d297-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=115&id=u8bfc32dd&margin=%5Bobject%20Object%5D&name=image.png&originHeight=144&originWidth=949&originalType=binary&ratio=1&rotation=0&showTitle=false&size=8599&status=done&style=none&taskId=u51af5f82-590a-413d-9a27-373ea4c9c8e&title=&width=759.2)\n   1. Front matter可以忽略`title`和`date`可以自动添加\n2. 书写内容\n   1. 内容尽量为markdown的格式支持的\n   1. 不支持的内容可能会尝试转换，比如后续可能会添加`引用语雀内容`、`嵌入第三方视频`这两个常用的。\n3. 点击发布\n\n<a name=\"dwY69\"></a>\n#### 更新文档\n\n1. 和发布相同，选择已有文档修改即可。\n1. 记得最后点击更新，触发推送。\n<a name=\"lAiw2\"></a>\n#### 删除文档\n> 语雀没有提供删除的推送功能，所以说需要利用已知的触发webhook，目前是利用新增评论来完成的，也可以利用把文档改为私有来删除，还没有完成这个功能\n\n1. 服务器保留备份，只是不生成静态文件\n   1. 只需要在Front matter中添加`draft: True`\n2. 服务器删除备份\n   1. 在文档下方的评论回复`#closed`，会删除服务器的备份。\n   1. 然后删除语雀文档即可\n   1. 后续看看有没有其他好的方案\n3. 删除语雀文档，服务器不删除\n   1. 比如hugo的默认布局文件`_index.md`，第一次发布后，就没用了。\n   1. 直接删除语雀文档就可以，直接删除不会触发webhook。\n<a name=\"K3fHn\"></a>\n## 已知问题\n\n1. 语雀图片防盗链\n   1. 目前只能是修改主题来处理，具体可以看[链接](https://senlief.xyz/posts/%E8%AF%AD%E9%9B%80%E7%9A%84%E5%9B%BE%E7%89%87%E9%98%B2%E7%9B%97%E9%93%BE%E9%97%AE%E9%A2%98/)\n   1. 后续会考虑讲图片拉到本地后替换链接\n   1. 上传到图床\n2. 渲染问题\n   1. hugo的markdown渲染很严格，所以编辑内容的时候一定要注意才行。\n   1. 尤其是换行的时候，可以空一行，要不不会换行。\n<a name=\"l2sJa\"></a>\n## 实践和效果\n`语雀：`[语雀文档的效果](https://www.yuque.com/zjan/blog)<br />`Blog：`[发布后部署的效果](https://senlief.xyz/posts/%E6%8A%8A%E8%AF%AD%E9%9B%80%E4%BD%9C%E4%B8%BA%E5%8D%9A%E5%AE%A2%E7%9A%84%E6%96%87%E6%A1%A3%E7%AE%A1%E7%90%86%E5%92%8C%E7%BC%96%E8%BE%91%E5%99%A8/)\n<a name=\"EIiFM\"></a>\n## TODO\n\n- 完善代码日志和出错\n- 图片处理\n- 解析错误\n\n'''
+    docs =  "![uTools_1648054722512 (2).jpg](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648833212606-f0abe9b7-8b60-4b8c-8700-a1e344ad33ab.jpeg#clientId=u997629aa-be97-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=u768d5c67&margin=%5Bobject%20Object%5D&name=uTools_1648054722512%20%282%29.jpg&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=u257d7075-d7fa-4b12-8792-b028fc6384f&title=)<br />[favicon_package_v0.16.zip](https://www.yuque.com/attachments/yuque/0/2022/zip/243852/1648833237057-bdee5e03-9652-4328-8e24-c88f88eaf488.zip?_lake_card=%7B%22src%22%3A%22https%3A%2F%2Fwww.yuque.com%2Fattachments%2Fyuque%2F0%2F2022%2Fzip%2F243852%2F1648833237057-bdee5e03-9652-4328-8e24-c88f88eaf488.zip%22%2C%22name%22%3A%22favicon_package_v0.16.zip%22%2C%22size%22%3A247603%2C%22type%22%3A%22application%2Fx-zip-compressed%22%2C%22ext%22%3A%22zip%22%2C%22status%22%3A%22done%22%2C%22taskId%22%3A%22u7bee152d-974f-4f68-be3a-d1d215849f8%22%2C%22taskType%22%3A%22upload%22%2C%22id%22%3A%22u61b54ec2%22%2C%22card%22%3A%22file%22%7D)\n\n| a | b | c |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n|  |  |  |\n\n![](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648833282053-08515385-fb75-452f-add8-11daea6460c1.jpeg)\n![](https://cdn.nlark.com/yuque/__puml/9f5560730e769f3fe0fe8387247e9beb.svg#lake_card_v2=eyJ0eXBlIjoicHVtbCIsImNvZGUiOiJAc3RhcnR1bWxcblA6IFBFTkRJTkdcblA6IFBlbmRpbmcgZm9yIHJlc3VsdFxuXG5OOiBOT19SRVNVTFRfWUVUXG5OOiBEaWQgbm90IHNlbmQgdGhlIEtZQyBjaGVjayB5ZXQgXG5cblk6IEFQUFJPVkVEXG5ZOiBLWUMgY2hlY2sgc3VjY2Vzc2Z1bFxuXG5SOiBSRUpFQ1RFRFxuUjogS1lDIGNoZWNrIGZvdW5kIHRoZSBhcHBsaWNhbnQncyBcblI6IGluZm9ybWF0aW9uIG5vdCBjb3JyZWN0IFxuXG5YOiBFWFBJUkVEXG5YOiBQcm9vZiBvZiBBZGRyZXNzIChQT0EpIHRvbyBvbGRcblxuWypdIC0tPiBOIDogQ2FyZCBhcHBsaWNhdGlvbiByZWNlaXZlZFxuTiAtLT4gUCA6IFN1Ym1pdHRlZCB0aGUgS1lDIGNoZWNrXG5QIC0tPiBZXG5QIC0tPiBSXG5QIC0tPiBYIDogUHJvb2Ygb2YgQWRkcmVzcyAoUE9BKSB0b28gb2xkXG5QIC0tPiBYIDogZXhwbGljaXRseSBieSBLWUNcblkgLS0-IFsqXVxuUiAtLT4gWypdXG5YIC0tPiBbKl1cbkBlbmR1bWwiLCJ1cmwiOiJodHRwczovL2Nkbi5ubGFyay5jb20veXVxdWUvX19wdW1sLzlmNTU2MDczMGU3NjlmM2ZlMGZlODM4NzI0N2U5YmViLnN2ZyIsImlkIjoib1JoUVUiLCJtYXJnaW4iOnsidG9wIjp0cnVlLCJib3R0b20iOnRydWV9LCJjYXJkIjoiZGlhZ3JhbSJ9)[点击查看【music163】](https://music.163.com/outchain/player?type=2&id=186453&auto=1&height=66\")\n\n"
     # print(hugo_lake_to_md(docs, 'test',  html=True))
     # print(front(docs, 'test', '```'))
     # with open('test.md', 'w') as f:
