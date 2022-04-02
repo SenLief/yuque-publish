@@ -21,7 +21,7 @@
         "hugo": {
             "html": true,
             "shortcode": true,
-            "front": ["author: sfdafsd", "img: xxxx"]
+            "front": ["author: janz"]
         }
     }
 

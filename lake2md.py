@@ -3,8 +3,8 @@
 
 import datetime
 import re
-import json
-from pathlib import Path
+# import json
+# from pathlib import Path
 
 # 通用的转换
 
@@ -22,11 +22,11 @@ class Doc:
     def __sep_doc(self):
         if len(self.doc) > 1:
             if '<br />' in self.doc:
-                d_list = self.doc.replace('<br />', '\n')
+                d_list = self.doc.replace('<br />', '  \n')
                 md_list = list(filter(lambda x: not x.startswith('<a'), d_list.split('\n')))
             else:
                 md_list = list(filter(lambda x: not x.startswith('<a'), self.doc.split('\n')))
-            
+
             flag = md_list[0]
             if flag == '```yaml' or flag == '---':
                 if flag == '```yaml':
@@ -95,7 +95,7 @@ class Doc:
 
     def __advanced_media(self, line):
 
-        if 'player.bilibili.com' in line:
+        if 'player.bilibili.com' in line and 'aid' not in line:
             p_bv = re.compile(r'BV\w{10}')
             bv = re.search(p_bv, line)[0]
             if '&p=' in line:
@@ -107,7 +107,6 @@ class Doc:
         elif 'music.163.com' in line:
             p_id = re.compile(r'&id=\d+&')
             pid = re.search(p_id, line)[0].lstrip('&id=').rstrip('&')
-            print(pid)
             url = f'{{{{< music auto="https://music.163.com/#/song?id={pid}" >}}}}'
         elif 'ditu.amap.com' in line:
             # 功能未实现，主题不支持高德，经纬度坐标不同。
@@ -118,7 +117,7 @@ class Doc:
             attachment_url = re.search(p_url, line)[0]
             p_cap = re.compile(r'\[.*]', re.I)
             attachment_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
-            url = f'[{attachment_cap}]({attachment_url})'
+            url = f'[{attachment_cap}]({attachment_url})  '
         else:
             url = line
         return url
@@ -240,15 +239,16 @@ def hugo_lake_to_md(docs, title, html=False):
     return '\n'.join(doc_list)
 
 
-if __name__ == '__main__':
-    docs =  "![uTools_1648054722512 (2).jpg](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648833212606-f0abe9b7-8b60-4b8c-8700-a1e344ad33ab.jpeg#clientId=u997629aa-be97-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=u768d5c67&margin=%5Bobject%20Object%5D&name=uTools_1648054722512%20%282%29.jpg&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=u257d7075-d7fa-4b12-8792-b028fc6384f&title=)<br />[favicon_package_v0.16.zip](https://www.yuque.com/attachments/yuque/0/2022/zip/243852/1648833237057-bdee5e03-9652-4328-8e24-c88f88eaf488.zip?_lake_card=%7B%22src%22%3A%22https%3A%2F%2Fwww.yuque.com%2Fattachments%2Fyuque%2F0%2F2022%2Fzip%2F243852%2F1648833237057-bdee5e03-9652-4328-8e24-c88f88eaf488.zip%22%2C%22name%22%3A%22favicon_package_v0.16.zip%22%2C%22size%22%3A247603%2C%22type%22%3A%22application%2Fx-zip-compressed%22%2C%22ext%22%3A%22zip%22%2C%22status%22%3A%22done%22%2C%22taskId%22%3A%22u7bee152d-974f-4f68-be3a-d1d215849f8%22%2C%22taskType%22%3A%22upload%22%2C%22id%22%3A%22u61b54ec2%22%2C%22card%22%3A%22file%22%7D)\n\n| a | b | c |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n|  |  |  |\n\n![](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648833282053-08515385-fb75-452f-add8-11daea6460c1.jpeg)\n![](https://cdn.nlark.com/yuque/__puml/9f5560730e769f3fe0fe8387247e9beb.svg#lake_card_v2=eyJ0eXBlIjoicHVtbCIsImNvZGUiOiJAc3RhcnR1bWxcblA6IFBFTkRJTkdcblA6IFBlbmRpbmcgZm9yIHJlc3VsdFxuXG5OOiBOT19SRVNVTFRfWUVUXG5OOiBEaWQgbm90IHNlbmQgdGhlIEtZQyBjaGVjayB5ZXQgXG5cblk6IEFQUFJPVkVEXG5ZOiBLWUMgY2hlY2sgc3VjY2Vzc2Z1bFxuXG5SOiBSRUpFQ1RFRFxuUjogS1lDIGNoZWNrIGZvdW5kIHRoZSBhcHBsaWNhbnQncyBcblI6IGluZm9ybWF0aW9uIG5vdCBjb3JyZWN0IFxuXG5YOiBFWFBJUkVEXG5YOiBQcm9vZiBvZiBBZGRyZXNzIChQT0EpIHRvbyBvbGRcblxuWypdIC0tPiBOIDogQ2FyZCBhcHBsaWNhdGlvbiByZWNlaXZlZFxuTiAtLT4gUCA6IFN1Ym1pdHRlZCB0aGUgS1lDIGNoZWNrXG5QIC0tPiBZXG5QIC0tPiBSXG5QIC0tPiBYIDogUHJvb2Ygb2YgQWRkcmVzcyAoUE9BKSB0b28gb2xkXG5QIC0tPiBYIDogZXhwbGljaXRseSBieSBLWUNcblkgLS0-IFsqXVxuUiAtLT4gWypdXG5YIC0tPiBbKl1cbkBlbmR1bWwiLCJ1cmwiOiJodHRwczovL2Nkbi5ubGFyay5jb20veXVxdWUvX19wdW1sLzlmNTU2MDczMGU3NjlmM2ZlMGZlODM4NzI0N2U5YmViLnN2ZyIsImlkIjoib1JoUVUiLCJtYXJnaW4iOnsidG9wIjp0cnVlLCJib3R0b20iOnRydWV9LCJjYXJkIjoiZGlhZ3JhbSJ9)[点击查看【music163】](https://music.163.com/outchain/player?type=2&id=186453&auto=1&height=66\")\n\n"
-    # print(hugo_lake_to_md(docs, 'test',  html=True))
-    # print(front(docs, 'test', '```'))
-    # with open('test.md', 'w') as f:
-    #     md_doc = hugo_lake_to_md(docs, 'test')
-    #     f.writelines(md_doc)
-    file_path = Path(Path().cwd())/ 'config.json'
-    with open(file_path, 'r') as f:
-        config = json.load(f)
-    doc = Doc(docs, 'test', config['blog'])
-    print(doc.lake_to_md())
+# if __name__ == '__main__':
+
+#     docs =  "```yaml\ntags: [test, yuque]\n```\n> 这是引用\n\n这是文字\n<a name=\"p0MEK\"></a>\n# 这是H1\n这是h1文字\n<a name=\"FE8LE\"></a>\n## 这是H2\n这是h2<br />**这是加粗**<br />**_这是斜体_**<br />下面是列表\n\n- list1\n- list2\n- list3\n\n下面是有序列表\n\n1. 1list\n1. 2list\n1. 3list\n\n下面是表格\n\n| a | b | c |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n\n下面是图片<br />![uTools_1648054722512 (2).jpg](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648913482476-284dd4f6-d81c-4320-ad54-e2f40e44ad5c.jpeg#clientId=u0c8c461d-2498-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=u75a9accd&margin=%5Bobject%20Object%5D&name=uTools_1648054722512%20%282%29.jpg&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=uad17c50f-f0a4-40e2-8a30-7c020adeb4a&title=)<br /> 下面是链接<br />[链接](http://www,baidu.com)<br />下面是代码\n```python\nimport this\n```\n`$ bash test.sh`这是行内代码<br />下面是b站<br />[点击查看【bilibili】](https://player.bilibili.com/player.html?bvid=BV1tq4y1e7RW)<br />下面是music<br />[点击查看【music163】](https://music.163.com/outchain/player?type=2&id=1420830402&auto=0&height=66)<br />下面是附件<br />[favicon_package_v0.16.zip](https://www.yuque.com/attachments/yuque/0/2022/zip/243852/1648913657004-5f256593-4400-4b63-a139-fdf0e5f3e6af.zip?_lake_card=%7B%22src%22%3A%22https%3A%2F%2Fwww.yuque.com%2Fattachments%2Fyuque%2F0%2F2022%2Fzip%2F243852%2F1648913657004-5f256593-4400-4b63-a139-fdf0e5f3e6af.zip%22%2C%22name%22%3A%22favicon_package_v0.16.zip%22%2C%22size%22%3A247603%2C%22type%22%3A%22application%2Fx-zip-compressed%22%2C%22ext%22%3A%22zip%22%2C%22status%22%3A%22done%22%2C%22taskId%22%3A%22ueddaf3ee-1665-4f3b-bafb-d74835d8b14%22%2C%22taskType%22%3A%22upload%22%2C%22id%22%3A%22u4f63386d%22%2C%22card%22%3A%22file%22%7D)<br />下面是导图<br />![](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648914842615-69be76e4-6e4a-4bd4-965a-6f0ae1b77930.jpeg)<br />下面是文本绘图\n![](https://cdn.nlark.com/yuque/__puml/9f5560730e769f3fe0fe8387247e9beb.svg#lake_card_v2=eyJ0eXBlIjoicHVtbCIsImNvZGUiOiJAc3RhcnR1bWxcblA6IFBFTkRJTkdcblA6IFBlbmRpbmcgZm9yIHJlc3VsdFxuXG5OOiBOT19SRVNVTFRfWUVUXG5OOiBEaWQgbm90IHNlbmQgdGhlIEtZQyBjaGVjayB5ZXQgXG5cblk6IEFQUFJPVkVEXG5ZOiBLWUMgY2hlY2sgc3VjY2Vzc2Z1bFxuXG5SOiBSRUpFQ1RFRFxuUjogS1lDIGNoZWNrIGZvdW5kIHRoZSBhcHBsaWNhbnQncyBcblI6IGluZm9ybWF0aW9uIG5vdCBjb3JyZWN0IFxuXG5YOiBFWFBJUkVEXG5YOiBQcm9vZiBvZiBBZGRyZXNzIChQT0EpIHRvbyBvbGRcblxuWypdIC0tPiBOIDogQ2FyZCBhcHBsaWNhdGlvbiByZWNlaXZlZFxuTiAtLT4gUCA6IFN1Ym1pdHRlZCB0aGUgS1lDIGNoZWNrXG5QIC0tPiBZXG5QIC0tPiBSXG5QIC0tPiBYIDogUHJvb2Ygb2YgQWRkcmVzcyAoUE9BKSB0b28gb2xkXG5QIC0tPiBYIDogZXhwbGljaXRseSBieSBLWUNcblkgLS0-IFsqXVxuUiAtLT4gWypdXG5YIC0tPiBbKl1cbkBlbmR1bWwiLCJ1cmwiOiJodHRwczovL2Nkbi5ubGFyay5jb20veXVxdWUvX19wdW1sLzlmNTU2MDczMGU3NjlmM2ZlMGZlODM4NzI0N2U5YmViLnN2ZyIsImlkIjoiaXdUVFQiLCJtYXJnaW4iOnsidG9wIjp0cnVlLCJib3R0b20iOnRydWV9LCJjYXJkIjoiZGlhZ3JhbSJ9)"
+#     # print(hugo_lake_to_md(docs, 'test',  html=True))
+#     # print(front(docs, 'test', '```'))
+#     # with open('test.md', 'w') as f:
+#     #     md_doc = hugo_lake_to_md(docs, 'test')
+#     #     f.writelines(md_doc)
+#     file_path = Path(Path().cwd())/ 'config.json'
+#     with open(file_path, 'r') as f:
+#         config = json.load(f)
+#     doc = Doc(docs, 'test', config['bwcmnq']['hugo'])
+#     print(doc.lake_to_md())
