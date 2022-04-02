@@ -23,9 +23,9 @@ class Doc:
         if len(self.doc) > 1:
             if '<br />' in self.doc:
                 d_list = self.doc.replace('<br />', '\n')
-                md_list = list(filter(lambda x: not x.startswith('<a') and x != "", d_list.split('\n')))
+                md_list = list(filter(lambda x: not x.startswith('<a'), d_list.split('\n')))
             else:
-                md_list = list(filter(lambda x: not x.startswith('<a') and x != "", self.doc.split('\n')))
+                md_list = list(filter(lambda x: not x.startswith('<a'), self.doc.split('\n')))
             
             flag = md_list[0]
             if flag == '```yaml' or flag == '---':
@@ -112,6 +112,13 @@ class Doc:
         elif 'ditu.amap.com' in line:
             # 功能未实现，主题不支持高德，经纬度坐标不同。
             pass
+        elif 'www.yuque.com/attachments' in line:
+            attachment_format = 'zip|mp4|rar|html|7z|ai|mov|m4a|wmv|avi|flv|chm|wps|rtf|aac|htm|xhtml|rmvb|asf|m3u8|mpg|flac|dat|mkv|swf|m4v|webm|mpeg|mts|3gp|f4v|dv|m2t|mj2|mjpeg|mpe|ogg'
+            p_url = re.compile(fr'https://www.yuque.com/attachments/yuque/\d/\d{{4}}/({attachment_format})/\d{{6}}/\w+-\w+-\w+-\w+-\w+-\w+.({attachment_format})', re.I)
+            attachment_url = re.search(p_url, line)[0]
+            p_cap = re.compile(r'\[.*]', re.I)
+            attachment_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
+            url = f'[{attachment_cap}]({attachment_url})'
         else:
             url = line
         return url
@@ -128,12 +135,12 @@ class Doc:
         if '[' and ']' and 'https://cdn.nlark.com' in line :
             media_info = self.__media(line)
             if '![' in line and self.conf.get('shortcode', False):
-                new_line = f'{{{{< image src={media_info[1]} caption={media_info[0]} >}}}}'
+                new_line = f'{{{{< image src="{media_info[1]}" caption="{media_info[0]}" >}}}}'
             elif self.conf.get('html', False):
-                new_line = f'<img src={media_info[1]} alt={media_info[0]} referrerPolicy="no-referrer" />'
+                new_line = f'<img src="{media_info[1]}" alt="{media_info[0]}" referrerPolicy="no-referrer" />'
             else:
                 new_line = f'![{media_info[0]}]({media_info[1]})'
-        elif 'bilibili' or '163' in line:
+        elif 'bilibili' or '163' or 'attachments' in line:
             new_line = self.__advanced_media(line)
         elif line.startswith('>'):
             new_line = line + '\n'

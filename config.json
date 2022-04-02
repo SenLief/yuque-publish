@@ -1,6 +1,6 @@
 {
     "blog": {
-        "token": "K9g7YqJf0r3lAceCFX8RTPq38zTV7lMxQG8iWsY0",
+        "token": "",
         "namespace": "zjan/blog",
         "desdir": "/home/janz/Blog/content/posts",
         "workdir": "/home/janz/Blog/",
@@ -13,7 +13,7 @@
     },
     
     "bwcmnq": {
-        "token": "K9g7YqJf0r3lAceCFX8RTPq38zTV7lMxQG8iWsY0",
+        "token": "",
         "namespace": "zjan/bwcmnq",
         "desdir": "/home/janz/test",
         "workdir": "/home/janz/test",
