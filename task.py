@@ -150,5 +150,5 @@ if __name__ == '__main__':
     # update_doc('ubuab7', '<a name=\"x9d6C\"></a>\n## 更新了一遍文章\n\n', 'uuid2')
     # time.sleep(3)
     # delete_doc('ubuab7', 'uuid2')
-    init_doc('bwcmnq')    
+    init_doc(os.environ['PREFIX'])    
     # Config('bwcmnq')
