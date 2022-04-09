@@ -3,252 +3,92 @@
 
 import datetime
 import re
-# import json
-# from pathlib import Path
 
-# 通用的转换
+from loguru import logger
+
 
 date = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00")
+# logger.add('test.log', format="{time} {level} {message}", level="INFO")
 
-
-class Doc:
-    def __init__(self, doc, title, config):
-        self.date = date
-        self.title = title
-        self.doc = doc
-        self.conf = config
-
-
-    def __sep_doc(self):
-        if len(self.doc) > 1:
-            if '<br />' in self.doc:
-                d_list = self.doc.replace('<br />', '  \n')
-                md_list = list(filter(lambda x: not x.startswith('<a'), d_list.split('\n')))
-            else:
-                md_list = list(filter(lambda x: not x.startswith('<a'), self.doc.split('\n')))
-
-            flag = md_list[0]
-            if flag == '```yaml' or flag == '---':
-                if flag == '```yaml':
-                    end_index = md_list[1:].index('```') + 1
-                elif flag == '---':
-                    end_index = md_list[1:].index('---') + 1
-                else:
-                    print("error")
-                front_list = (md_list[1:end_index])
-                content_list = (md_list[end_index+1:])
-            elif '`>' in md_list:
-                # 私有的格式
-                pass
-            else:
-                # 没有front,自动填充
-                front_list = []
-                content_list = md_list
-        else:
-            # 空文档
-            front_list = []
-            content_list = []
-        return front_list, content_list
-
-    def __front(self, front_list):
-        front = []
-        front.append(f'title: {self.title}')
-        front.append(f'date: {self.date}')
-        front.extend(front_list)
-        if 'front' in self.conf:
-            front_addon_list = self.conf['front']
-            front.extend(front_addon_list)
-        else:
-            pass
-        front.insert(0, '---')
-        front.append('---')
-        return front
-
-
-    def __media(self, line):
-        media_info = []
-        p_cap = re.compile(r'\[.*]', re.I)
-        media_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
-        if ' ' in media_cap:
-            media_cap = media_cap.replace(' ', '')
-        else:
-            pass
-        media_info.append(media_cap)
-
-        if 'svg' not in line:
-            p_url = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg|7z|zip|rar)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg|7z|zip|rar)', re.I)
-            # p_cap = re.compile(r'\[.*]', re.I)
-            media_url = re.search(p_url, line)[0]
-            # media_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
-            # if ' ' in media_cap:
-            #     media_cap = media_cap.replace(' ', '')
-            # else:
-            #     pass
-            # media_info.append(media_cap)
-            media_info.append(media_url)
-        else:
-            p_m = re.compile(r'https://cdn.nlark.com/yuque/\w+/\w{32}\.svg')
-            p_url = re.search(p_m, line)[0]
-            media_info.append(p_url)
-        return media_info
-
-
-    def __advanced_media(self, line):
-
-        if 'player.bilibili.com' in line and 'aid' not in line:
-            p_bv = re.compile(r'BV\w{10}')
-            bv = re.search(p_bv, line)[0]
-            if '&p=' in line:
-                p_page = re.compile(r'&p=\d+&')
-                page = re.search(p_page, line)[0].lstrip('&p=').rstrip('&')
-                url = f'{{{{< bilibili {bv} {page} >}}}}'
-            else:
-                url = f'{{{{< bilibili {bv} >}}}}'
-        elif 'music.163.com' in line:
-            p_id = re.compile(r'&id=\d+&')
-            pid = re.search(p_id, line)[0].lstrip('&id=').rstrip('&')
-            url = f'{{{{< music auto="https://music.163.com/#/song?id={pid}" >}}}}'
-        elif 'ditu.amap.com' in line:
-            # 功能未实现，主题不支持高德，经纬度坐标不同。
-            pass
-        elif 'www.yuque.com/attachments' in line:
-            attachment_format = 'zip|mp4|rar|html|7z|ai|mov|m4a|wmv|avi|flv|chm|wps|rtf|aac|htm|xhtml|rmvb|asf|m3u8|mpg|flac|dat|mkv|swf|m4v|webm|mpeg|mts|3gp|f4v|dv|m2t|mj2|mjpeg|mpe|ogg'
-            p_url = re.compile(fr'https://www.yuque.com/attachments/yuque/\d/\d{{4}}/({attachment_format})/\d{{6}}/\w+-\w+-\w+-\w+-\w+-\w+.({attachment_format})', re.I)
-            attachment_url = re.search(p_url, line)[0]
-            p_cap = re.compile(r'\[.*]', re.I)
-            attachment_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
-            url = f'[{attachment_cap}]({attachment_url})  '
-        else:
-            url = line
-        return url
-
-
-    # def __text(self, line):
-    #     if '<' in line:
-    #         return line + '\n'
-    #     else:
-    #         return line
-
-
-    def __generate_md(self, line):
-        if '[' and ']' and 'https://cdn.nlark.com' in line :
-            media_info = self.__media(line)
-            if '![' in line and self.conf.get('shortcode', False):
-                new_line = f'{{{{< image src="{media_info[1]}" caption="{media_info[0]}" >}}}}'
-            elif self.conf.get('html', False):
-                new_line = f'<img src="{media_info[1]}" alt="{media_info[0]}" referrerPolicy="no-referrer" />'
-            else:
-                new_line = f'![{media_info[0]}]({media_info[1]})'
-        elif 'bilibili' or '163' or 'attachments' in line:
-            new_line = self.__advanced_media(line)
-        elif line.startswith('>'):
-            new_line = line + '\n'
-        else:
-            new_line = line
-        
-        return new_line
-
-    
-    def lake_to_md(self):
-        front_list, content_list = self.__sep_doc()
-        front_list = self.__front(front_list)
-        content_list = list(map(self.__generate_md, content_list))
-        return '\n'.join([*front_list, *content_list])
-                
-
-def hugo_lake_to_md(docs, title, html=False):
-    date = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00")
-    # markdown内容list
-    doc_list = []
-
-    if len(docs) > 1:
-        # 处理换行以及不是markdown的内容
-        if '<br />' in docs:
-            d_list = docs.replace('<br />', '\n')
-            md_list = list(filter(lambda x: not x.startswith('<a') and x != "", d_list.split('\n')))
-        else:
-            md_list = list(filter(lambda x: not x.startswith('<a') and x != "", docs.split('\n')))
-  
-    # 处理front matter
-    # if len(md_list) != 0:
-        flag = md_list[0]
-        if flag == '```yaml' or flag == '---':
-            if flag == '```yaml':
-                end_index = md_list[1:].index('```') + 1
-            elif flag == '---':
-                end_index = md_list[1:].index('---') + 1
-            else:
-                print("error")
-
-
-            f = []
-            for line in md_list[1:end_index]:
-                if 'title:' in line and len(line) > 7:
-                    f.append('title')
-                elif 'date:' in line and len(line) > 6:
-                    f.append('date')
-                else:
-                    pass
-                
-                doc_list.append(line)
-            
-            if 'title' not in f:
-                doc_list.append('title: ' + title)
-            if 'date' not in f:
-                doc_list.append('date: ' + date)
-            else:
-                pass
-
-            doc_list.insert(0, '---')
-            doc_list.append('---')
-            content_list = md_list[end_index+1:]
-        else:
-            doc_list.insert(0, '---')
-            doc_list.append('title: ' + title)
-            doc_list.append('date: ' + date)
-            doc_list.append('---')
-            content_list = md_list
+def get_pic(line):
+    p_cap = re.compile(r'\[.*]', re.I)
+    media_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
+    if ' ' in media_cap:
+        media_cap = media_cap.replace(' ', '')
     else:
-        print("空文档")
-        doc_list.insert(0, '---')
-        doc_list.append('title: ' + title)
-        doc_list.append('date: ' + date)
-        doc_list.append('---')
-        return '\n'.join(doc_list)
+        pass
+    logger.debug("图片的信息：{media_cap}")
+    if 'svg' in line:
+        p_m = re.compile(r'https://cdn.nlark.com/yuque/\w+/\w{32}\.svg')
+        media_url = re.search(p_m, line)[0]
+        logger.debug("画板的地址：{media_url}")
+    else:
+        p_url = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg)', re.I)
+        media_url = re.search(p_url, line)[0]
+        logger.debug("图片的地址：{media_url}")
+    return f'<img src="{media_url}" alt="{media_cap}" referrerPolicy="no-referrer" />  '
 
-    # 处理图片
-    p = re.compile(r'https://cdn.nlark.com/yuque/\d/\d{4}/(png|jpeg|7z|zip|rar)/\d{6}/\w+-\w+-\w+-\w+-\w+-\w+.(png|jpeg|7z|zip|rar)', re.I)
 
-    for line in content_list:
-        if '![' in line:
-            img_url = re.search(p, line)[0]
-            if html:
-                doc_list.append('\n')
-                doc_list.append(f'<img src={img_url} referrerPolicy="no-referrer" />')
-                doc_list.append('\n')
-            else:
-                doc_list.append('\n')
-                doc_list.append(f'![]({img_url})')
-                doc_list.append('\n')
-        elif line.startswith('<'):
-            doc_list.append(line)
-            doc_list.append('\n')
+def get_attachment(line):
+    if 'www.yuque.com/attachments' in line:
+        logger.debug("附件的地址：{line}")
+        p_cap = re.compile(r'\[.*]', re.I)
+        attachment_cap = re.search(p_cap, line)[0].lstrip('[').rstrip(']')
+        if ' ' in attachment_cap:
+            attachment_cap = attachment_cap.replace(' ', '')
+        else:
+            pass
+        attachment_format = 'zip|mp4|rar|html|7z|ai|mov|m4a|wmv|avi|flv|chm|wps|rtf|aac|htm|xhtml|rmvb|asf|m3u8|mpg|flac|dat|mkv|swf|m4v|webm|mpeg|mts|3gp|f4v|dv|m2t|mj2|mjpeg|mpe|ogg'
+        p_url = re.compile(fr'https://www.yuque.com/attachments/yuque/\d/\d{{4}}/({attachment_format})/\d{{6}}/\w+-\w+-\w+-\w+-\w+-\w+.({attachment_format})', re.I)
+        attachment_url = re.search(p_url, line)[0]
+        attachment = f'[{attachment_cap}]({attachment_url})'
+    else:
+        attachment = line
+    return attachment
+
+
+def lake_to_md(doc, title):
+    try:
+        if '<br />' in doc:
+            d_list = doc.replace('<br />', '  \n')
+            md_list = list(filter(lambda x: not x.startswith('<a'), d_list.split('\n')))
+        else:
+            md_list = list(filter(lambda x: not x.startswith('<a'), doc.split('\n')))
+    except IndexError as e:
+        logger.info("文档为空，不渲染！")
+        logger.error(e)
+    logger.debug("文档的内容：{md_list}")    
+
+    doc_list = []
+    for line in md_list:
+        if line.startswith('!['):
+            img_url = get_pic(line)
+            doc_list.append(img_url)
+        elif 'www.yuque.com/attachments' in line:
+            attachment_url = get_attachment(line)
+            doc_list.append(attachment_url)
         else:
             doc_list.append(line)
     
+    if doc_list[0] == '---':
+        doc_list.insert(1, f"title: {title}")
+        doc_list.insert(2, f"date: {date}")
+    elif doc_list[0] == '```yaml':
+        doc_list[0] = '---'
+        index = doc_list[1:].index('```')
+        doc_list[index+1] = '---'
+        doc_list.insert(1, f"title: {title}")
+        doc_list.insert(2, f"date: {date}")
+    else:
+        doc_list.insert(0, '---')
+        doc_list.insert(1, f'title: {title}')
+        doc_list.insert(2, f'date: {date}')
+        doc_list.insert(3, '---')      
+    
+    logger.debug("Markdown的文档内容为：{}", '\n'.join(doc_list))
     return '\n'.join(doc_list)
 
 
-# if __name__ == '__main__':
-
-#     docs =  "```yaml\ntags: [test, yuque]\n```\n> 这是引用\n\n这是文字\n<a name=\"p0MEK\"></a>\n# 这是H1\n这是h1文字\n<a name=\"FE8LE\"></a>\n## 这是H2\n这是h2<br />**这是加粗**<br />**_这是斜体_**<br />下面是列表\n\n- list1\n- list2\n- list3\n\n下面是有序列表\n\n1. 1list\n1. 2list\n1. 3list\n\n下面是表格\n\n| a | b | c |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n\n下面是图片<br />![uTools_1648054722512 (2).jpg](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648913482476-284dd4f6-d81c-4320-ad54-e2f40e44ad5c.jpeg#clientId=u0c8c461d-2498-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=u75a9accd&margin=%5Bobject%20Object%5D&name=uTools_1648054722512%20%282%29.jpg&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=uad17c50f-f0a4-40e2-8a30-7c020adeb4a&title=)<br /> 下面是链接<br />[链接](http://www,baidu.com)<br />下面是代码\n```python\nimport this\n```\n`$ bash test.sh`这是行内代码<br />下面是b站<br />[点击查看【bilibili】](https://player.bilibili.com/player.html?bvid=BV1tq4y1e7RW)<br />下面是music<br />[点击查看【music163】](https://music.163.com/outchain/player?type=2&id=1420830402&auto=0&height=66)<br />下面是附件<br />[favicon_package_v0.16.zip](https://www.yuque.com/attachments/yuque/0/2022/zip/243852/1648913657004-5f256593-4400-4b63-a139-fdf0e5f3e6af.zip?_lake_card=%7B%22src%22%3A%22https%3A%2F%2Fwww.yuque.com%2Fattachments%2Fyuque%2F0%2F2022%2Fzip%2F243852%2F1648913657004-5f256593-4400-4b63-a139-fdf0e5f3e6af.zip%22%2C%22name%22%3A%22favicon_package_v0.16.zip%22%2C%22size%22%3A247603%2C%22type%22%3A%22application%2Fx-zip-compressed%22%2C%22ext%22%3A%22zip%22%2C%22status%22%3A%22done%22%2C%22taskId%22%3A%22ueddaf3ee-1665-4f3b-bafb-d74835d8b14%22%2C%22taskType%22%3A%22upload%22%2C%22id%22%3A%22u4f63386d%22%2C%22card%22%3A%22file%22%7D)<br />下面是导图<br />![](https://cdn.nlark.com/yuque/0/2022/jpeg/243852/1648914842615-69be76e4-6e4a-4bd4-965a-6f0ae1b77930.jpeg)<br />下面是文本绘图\n![](https://cdn.nlark.com/yuque/__puml/9f5560730e769f3fe0fe8387247e9beb.svg#lake_card_v2=eyJ0eXBlIjoicHVtbCIsImNvZGUiOiJAc3RhcnR1bWxcblA6IFBFTkRJTkdcblA6IFBlbmRpbmcgZm9yIHJlc3VsdFxuXG5OOiBOT19SRVNVTFRfWUVUXG5OOiBEaWQgbm90IHNlbmQgdGhlIEtZQyBjaGVjayB5ZXQgXG5cblk6IEFQUFJPVkVEXG5ZOiBLWUMgY2hlY2sgc3VjY2Vzc2Z1bFxuXG5SOiBSRUpFQ1RFRFxuUjogS1lDIGNoZWNrIGZvdW5kIHRoZSBhcHBsaWNhbnQncyBcblI6IGluZm9ybWF0aW9uIG5vdCBjb3JyZWN0IFxuXG5YOiBFWFBJUkVEXG5YOiBQcm9vZiBvZiBBZGRyZXNzIChQT0EpIHRvbyBvbGRcblxuWypdIC0tPiBOIDogQ2FyZCBhcHBsaWNhdGlvbiByZWNlaXZlZFxuTiAtLT4gUCA6IFN1Ym1pdHRlZCB0aGUgS1lDIGNoZWNrXG5QIC0tPiBZXG5QIC0tPiBSXG5QIC0tPiBYIDogUHJvb2Ygb2YgQWRkcmVzcyAoUE9BKSB0b28gb2xkXG5QIC0tPiBYIDogZXhwbGljaXRseSBieSBLWUNcblkgLS0-IFsqXVxuUiAtLT4gWypdXG5YIC0tPiBbKl1cbkBlbmR1bWwiLCJ1cmwiOiJodHRwczovL2Nkbi5ubGFyay5jb20veXVxdWUvX19wdW1sLzlmNTU2MDczMGU3NjlmM2ZlMGZlODM4NzI0N2U5YmViLnN2ZyIsImlkIjoiaXdUVFQiLCJtYXJnaW4iOnsidG9wIjp0cnVlLCJib3R0b20iOnRydWV9LCJjYXJkIjoiZGlhZ3JhbSJ9)"
-#     # print(hugo_lake_to_md(docs, 'test',  html=True))
-#     # print(front(docs, 'test', '```'))
-#     # with open('test.md', 'w') as f:
-#     #     md_doc = hugo_lake_to_md(docs, 'test')
-#     #     f.writelines(md_doc)
-#     file_path = Path(Path().cwd())/ 'config.json'
-#     with open(file_path, 'r') as f:
-#         config = json.load(f)
-#     doc = Doc(docs, 'test', config['bwcmnq']['hugo'])
-#     print(doc.lake_to_md())
+if __name__ == '__main__':
+    doc = "```yaml\ntags: [yuque, 防盗链]\n```\n> 语雀的图片现在已经开始防盗链了，这样就不好利用api同步到其他地方去，目前只能通过修改主题解决这个问题\n\n<a name=\"SbWqz\"></a>\n## Hugo修改主题\n`themes/<theme>/layouts/_default/baseof.html`  <br />修改这个文件添加几行代码  \n```html\n<head>\n    <meta name=\"referrer\" content=\"never\">\n</head>\n```\n<a name=\"ayC8Q\"></a>\n## 为每个图片链接添加属性\n> HTML的img标签可以通过添加属性来返回referer\n\n```html\n<img src=\"xxxxx\" referrerPolicy=\"no-referrer\"/>\n```\n \n<a name=\"YcyXB\"></a>\n## 最后还是需要把图片拉到本地才行。  \n![uTools_1648054722512.png](https://cdn.nlark.com/yuque/0/2022/png/243852/1648054731230-a4141c6f-be21-4906-bdca-f2443fceb0b6.png#clientId=u05a807ef-2cfd-4&crop=0&crop=0&crop=1&crop=1&from=ui&id=ud2170015&margin=%5Bobject%20Object%5D&name=uTools_1648054722512.png&originHeight=857&originWidth=1693&originalType=binary&ratio=1&rotation=0&showTitle=false&size=73815&status=done&style=none&taskId=u6580d2c6-af27-4c2e-8012-e795162e884&title=)\n\n[语雀的图片防盗链问题](https://senlief.xyz/posts/语雀的图片防盗链问题.html)\n"
+    print(lake_to_md(doc, 'test'))

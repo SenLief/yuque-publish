@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-
+import sys
 import requests
 import yaml
 from pathlib import Path
+from loguru import logger
 
 class YuQue:
     def __init__(self, token):
         self.token = token
         self.uri = 'https://www.yuque.com/api/v2'
+        logger.info("TOKEN：{}", self.token)
 
     def _get(self, url, **kw):
         params = kw.get("params")
@@ -30,6 +32,7 @@ class YuQue:
         if resp.get("status") == 401:
             print("Token Error")
         else:
+            logger.info("Format: {}", resp['data']['format'])
             return resp['data']
 
     def get_info(self, namespace):

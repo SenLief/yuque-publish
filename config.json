@@ -1,28 +1,14 @@
 {
-    "blog": {
-        "token": "",
-        "namespace": "zjan/blog",
-        "desdir": "/home/janz/Blog/content/posts",
-        "workdir": "/home/janz/Blog/",
-        "cmd": "hugo",
-        "hugo": {
-            "html": true,
-            "shortcode": true,
-            "front": ["author: Janz", "lightgallery: true"]
-        }
-    },
-    
-    "bwcmnq": {
-        "token": "",
-        "namespace": "zjan/bwcmnq",
-        "desdir": "/home/janz/test",
-        "workdir": "/home/janz/test",
-        "cmd": "touch test.conf",
-        "hugo": {
-            "html": true,
-            "shortcode": true,
-            "front": ["author: janz"]
-        }
-    }
+      "HKhES261418": {
+            "token": "",
+            "basedir": "/home/janz",
+            "desdir": "HKhES261418/content/posts",
+            "workdir": "HKhES261418",
+            "cmd": "hugo",
+            "hugo": {
+                  "html": true,
+                  "shortcode": false
+            }
+      }
 
 }
